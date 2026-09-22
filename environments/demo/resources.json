@@ -1,0 +1,979 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "automountServiceAccountToken": false,
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "mpr-identity",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-20"
+        }
+      },
+      "imagePullSecrets": [
+        {
+          "name": "realtiva-ghcr-pull"
+        }
+      ]
+    },
+    {
+      "apiVersion": "v1",
+      "automountServiceAccountToken": false,
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "mpr-identity-migrator",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-20"
+        }
+      },
+      "imagePullSecrets": [
+        {
+          "name": "realtiva-ghcr-pull"
+        }
+      ]
+    },
+    {
+      "apiVersion": "v1",
+      "automountServiceAccountToken": false,
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "mpr-presence",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-20"
+        }
+      },
+      "imagePullSecrets": [
+        {
+          "name": "realtiva-ghcr-pull"
+        }
+      ]
+    },
+    {
+      "apiVersion": "v1",
+      "automountServiceAccountToken": false,
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "mpr-presence-migrator",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-20"
+        }
+      },
+      "imagePullSecrets": [
+        {
+          "name": "realtiva-ghcr-pull"
+        }
+      ]
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "mpr-identity",
+          "app.kubernetes.io/part-of": "relativa-pilot",
+          "mpr.redcol/service": "identity"
+        },
+        "name": "mpr-identity",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-20"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "api",
+            "port": 8443,
+            "targetPort": "api"
+          }
+        ],
+        "selector": {
+          "app.kubernetes.io/name": "mpr-identity"
+        },
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "mpr-presence",
+          "app.kubernetes.io/part-of": "relativa-pilot",
+          "mpr.redcol/service": "presence"
+        },
+        "name": "mpr-presence",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-20"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "api",
+            "port": 8443,
+            "targetPort": "api"
+          }
+        ],
+        "selector": {
+          "app.kubernetes.io/name": "mpr-presence"
+        },
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "0"
+        },
+        "labels": {
+          "app.kubernetes.io/name": "mpr-identity",
+          "app.kubernetes.io/part-of": "relativa-pilot",
+          "mpr.redcol/service": "identity"
+        },
+        "name": "mpr-identity",
+        "namespace": "realtiva-rehearsal"
+      },
+      "spec": {
+        "replicas": 0,
+        "revisionHistoryLimit": 3,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "mpr-identity"
+          }
+        },
+        "strategy": {
+          "type": "Recreate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "mpr-identity",
+              "app.kubernetes.io/part-of": "relativa-pilot",
+              "mpr.redcol/service": "identity"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "Identity__PresenceOrigin",
+                    "value": "https://mpr-presence.realtiva-rehearsal.svc.cluster.local:8443"
+                  },
+                  {
+                    "name": "Kestrel__Endpoints__Api__Url",
+                    "value": "https://0.0.0.0:8443"
+                  },
+                  {
+                    "name": "Kestrel__Endpoints__Management__Url",
+                    "value": "http://0.0.0.0:8081"
+                  },
+                  {
+                    "name": "Identity__ManagementPort",
+                    "value": "8081"
+                  },
+                  {
+                    "name": "Kestrel__Certificates__Default__Path",
+                    "value": "/run/mpr/tls/service.pfx"
+                  },
+                  {
+                    "name": "Kestrel__Certificates__Default__Password",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "pfxPassword",
+                        "name": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-identity"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Identity__ConnectionString",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "connectionString",
+                        "name": "mpr-identity-runtime-sql"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Identity__ClientCertificateFile",
+                    "value": "/run/mpr/tls/service.pfx"
+                  },
+                  {
+                    "name": "Identity__ClientCertificatePassword",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "pfxPassword",
+                        "name": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-identity"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Identity__TrustedRootCaFile",
+                    "value": "/run/mpr/tls/ca.crt"
+                  },
+                  {
+                    "name": "Identity__PresenceCertificateSha256",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "presenceSha256",
+                        "name": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-pins"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Identity__PublicOrigin",
+                    "value": "https://app.realtiva.121labs.ai"
+                  },
+                  {
+                    "name": "Identity__Otel__Endpoint",
+                    "value": "http://mpr-otlp.realtiva-rehearsal-otlp.svc.cluster.local:4318/v1/metrics"
+                  },
+                  {
+                    "name": "Identity__Otel__Protocol",
+                    "value": "http/protobuf"
+                  }
+                ],
+                "image": "ghcr.io/121labs-ai/realtiva-mpr-identity@sha256:9aff47d639dcdb7672513a34e2dc653e6a8b6d542ddee2b7bb0d34cfe240e128",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/health/live",
+                    "port": "management"
+                  },
+                  "periodSeconds": 10,
+                  "timeoutSeconds": 2
+                },
+                "name": "identity",
+                "ports": [
+                  {
+                    "containerPort": 8443,
+                    "name": "api"
+                  },
+                  {
+                    "containerPort": 8081,
+                    "name": "management"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 2,
+                  "httpGet": {
+                    "path": "/health/ready",
+                    "port": "management"
+                  },
+                  "periodSeconds": 5,
+                  "timeoutSeconds": 2
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "192Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true
+                },
+                "startupProbe": {
+                  "failureThreshold": 30,
+                  "httpGet": {
+                    "path": "/health/live",
+                    "port": "management"
+                  },
+                  "periodSeconds": 2
+                },
+                "volumeMounts": [
+                  {
+                    "mountPath": "/run/mpr/tls",
+                    "name": "tls",
+                    "readOnly": true
+                  },
+                  {
+                    "mountPath": "/tmp",
+                    "name": "tmp"
+                  }
+                ]
+              }
+            ],
+            "securityContext": {
+              "fsGroup": 1654,
+              "runAsGroup": 1654,
+              "runAsNonRoot": true,
+              "runAsUser": 1654,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "serviceAccountName": "mpr-identity",
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "name": "tls",
+                "secret": {
+                  "defaultMode": 288,
+                  "items": [
+                    {
+                      "key": "service.pfx",
+                      "path": "service.pfx"
+                    },
+                    {
+                      "key": "ca.crt",
+                      "path": "ca.crt"
+                    }
+                  ],
+                  "secretName": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-identity"
+                }
+              },
+              {
+                "emptyDir": {
+                  "medium": "Memory",
+                  "sizeLimit": "32Mi"
+                },
+                "name": "tmp"
+              }
+            ],
+            "imagePullSecrets": [
+              {
+                "name": "realtiva-ghcr-pull"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "0"
+        },
+        "labels": {
+          "app.kubernetes.io/name": "mpr-presence",
+          "app.kubernetes.io/part-of": "relativa-pilot",
+          "mpr.redcol/service": "presence"
+        },
+        "name": "mpr-presence",
+        "namespace": "realtiva-rehearsal"
+      },
+      "spec": {
+        "replicas": 0,
+        "revisionHistoryLimit": 3,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "mpr-presence"
+          }
+        },
+        "strategy": {
+          "type": "Recreate"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "mpr-presence",
+              "app.kubernetes.io/part-of": "relativa-pilot",
+              "mpr.redcol/service": "presence"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "Presence__IdentityOrigin",
+                    "value": "https://mpr-identity.realtiva-rehearsal.svc.cluster.local:8443"
+                  },
+                  {
+                    "name": "Kestrel__Endpoints__Api__Url",
+                    "value": "https://0.0.0.0:8443"
+                  },
+                  {
+                    "name": "Kestrel__Endpoints__Management__Url",
+                    "value": "http://0.0.0.0:8081"
+                  },
+                  {
+                    "name": "Kestrel__Certificates__Default__Path",
+                    "value": "/run/mpr/tls/service.pfx"
+                  },
+                  {
+                    "name": "Kestrel__Certificates__Default__Password",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "pfxPassword",
+                        "name": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-presence"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__ConnectionString",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "connectionString",
+                        "name": "mpr-presence-runtime-sql"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__TrustedClientCaFile",
+                    "value": "/run/mpr/tls/ca.crt"
+                  },
+                  {
+                    "name": "Presence__IdentityCertificateSha256",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "identitySha256",
+                        "name": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-pins"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__PublicOrigin",
+                    "value": "https://app.realtiva.121labs.ai"
+                  },
+                  {
+                    "name": "Presence__ClientCertificateFile",
+                    "value": "/run/mpr/tls/service.pfx"
+                  },
+                  {
+                    "name": "Presence__ClientCertificatePassword",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "pfxPassword",
+                        "name": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-presence"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__LiveKit__ApiUrl",
+                    "value": "https://rtc.realtiva.121labs.ai"
+                  },
+                  {
+                    "name": "Presence__LiveKit__WebsocketUrl",
+                    "value": "wss://rtc.realtiva.121labs.ai"
+                  },
+                  {
+                    "name": "Presence__LiveKit__RoomNamespace",
+                    "value": "mpr-rehearsal-"
+                  },
+                  {
+                    "name": "Presence__LiveKit__ApiKey",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "apiKey",
+                        "name": "mpr-presence-livekit"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__LiveKit__ApiSecret",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "apiSecret",
+                        "name": "mpr-presence-livekit"
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__EnrollmentEmail__Mode",
+                    "value": "disabled"
+                  },
+                  {
+                    "name": "Presence__EnrollmentEmail__Host",
+                    "value": "smtp-relay.invalid"
+                  },
+                  {
+                    "name": "Presence__EnrollmentEmail__Port",
+                    "value": "587"
+                  },
+                  {
+                    "name": "Presence__EnrollmentEmail__From",
+                    "value": "notificaciones@pilot-origin.invalid"
+                  },
+                  {
+                    "name": "Presence__EnrollmentEmail__AllowPlaintext",
+                    "value": "false"
+                  },
+                  {
+                    "name": "Presence__EnrollmentEmail__User",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "user",
+                        "name": "mpr-presence-smtp",
+                        "optional": true
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__EnrollmentEmail__Password",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "password",
+                        "name": "mpr-presence-smtp",
+                        "optional": true
+                      }
+                    }
+                  },
+                  {
+                    "name": "Presence__VisitRetentionDays",
+                    "value": "0"
+                  },
+                  {
+                    "name": "Presence__Otel__Endpoint",
+                    "value": "http://mpr-otlp.realtiva-rehearsal-otlp.svc.cluster.local:4318/v1/metrics"
+                  },
+                  {
+                    "name": "Presence__Otel__Protocol",
+                    "value": "http/protobuf"
+                  }
+                ],
+                "image": "ghcr.io/121labs-ai/realtiva-mpr-presence@sha256:86bda5a2729f8d51067e9fb250db5cf05804d06222bbe0ea9bf6828019571be2",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/health/live",
+                    "port": "management"
+                  },
+                  "periodSeconds": 10,
+                  "timeoutSeconds": 2
+                },
+                "name": "presence",
+                "ports": [
+                  {
+                    "containerPort": 8443,
+                    "name": "api"
+                  },
+                  {
+                    "containerPort": 8081,
+                    "name": "management"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 2,
+                  "httpGet": {
+                    "path": "/health/ready",
+                    "port": "management"
+                  },
+                  "periodSeconds": 5,
+                  "timeoutSeconds": 2
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "192Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true
+                },
+                "startupProbe": {
+                  "failureThreshold": 30,
+                  "httpGet": {
+                    "path": "/health/live",
+                    "port": "management"
+                  },
+                  "periodSeconds": 2
+                },
+                "volumeMounts": [
+                  {
+                    "mountPath": "/run/mpr/tls",
+                    "name": "tls",
+                    "readOnly": true
+                  },
+                  {
+                    "mountPath": "/tmp",
+                    "name": "tmp"
+                  }
+                ]
+              }
+            ],
+            "securityContext": {
+              "fsGroup": 1654,
+              "runAsGroup": 1654,
+              "runAsNonRoot": true,
+              "runAsUser": 1654,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "serviceAccountName": "mpr-presence",
+            "terminationGracePeriodSeconds": 30,
+            "volumes": [
+              {
+                "name": "tls",
+                "secret": {
+                  "defaultMode": 288,
+                  "items": [
+                    {
+                      "key": "service.pfx",
+                      "path": "service.pfx"
+                    },
+                    {
+                      "key": "ca.crt",
+                      "path": "ca.crt"
+                    }
+                  ],
+                  "secretName": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-presence"
+                }
+              },
+              {
+                "emptyDir": {
+                  "medium": "Memory",
+                  "sizeLimit": "32Mi"
+                },
+                "name": "tmp"
+              }
+            ],
+            "imagePullSecrets": [
+              {
+                "name": "realtiva-ghcr-pull"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "default-deny",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-30"
+        }
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "dns-egress",
+        "namespace": "realtiva-rehearsal",
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-30"
+        }
+      },
+      "spec": {
+        "egress": [
+          {
+            "ports": [
+              {
+                "port": 53,
+                "protocol": "UDP"
+              },
+              {
+                "port": 53,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "kube-system"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "k8s-app": "kube-dns"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchLabels": {
+            "app.kubernetes.io/part-of": "relativa-pilot"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-30"
+        },
+        "name": "identity-authority",
+        "namespace": "realtiva-rehearsal"
+      },
+      "spec": {
+        "egress": [
+          {
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "mpr-presence"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "port": 1433,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "10.0.0.3/32"
+                }
+              }
+            ]
+          }
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "mpr-presence"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchLabels": {
+            "mpr.redcol/service": "identity"
+          }
+        },
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-30"
+        },
+        "labels": {
+          "app.kubernetes.io/part-of": "relativa-pilot"
+        },
+        "name": "mpr-edge-ingress",
+        "namespace": "realtiva-rehearsal"
+      },
+      "spec": {
+        "ingress": [
+          {
+            "from": [
+              {
+                "namespaceSelector": {
+                  "matchLabels": {
+                    "kubernetes.io/metadata.name": "realtiva-rehearsal-edge"
+                  }
+                },
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "mpr-edge"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchExpressions": [
+            {
+              "key": "mpr.redcol/service",
+              "operator": "In",
+              "values": [
+                "identity",
+                "presence"
+              ]
+            }
+          ]
+        },
+        "policyTypes": [
+          "Ingress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-30"
+        },
+        "labels": {
+          "app.kubernetes.io/part-of": "relativa-pilot"
+        },
+        "name": "presence-livekit-egress",
+        "namespace": "realtiva-rehearsal"
+      },
+      "spec": {
+        "egress": [
+          {
+            "ports": [
+              {
+                "port": 443,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "5.161.125.232/32"
+                }
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchLabels": {
+            "mpr.redcol/service": "presence"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "annotations": {
+          "argocd.argoproj.io/sync-wave": "-30"
+        },
+        "name": "presence-authority",
+        "namespace": "realtiva-rehearsal"
+      },
+      "spec": {
+        "egress": [
+          {
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "mpr-identity"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "port": 1433,
+                "protocol": "TCP"
+              }
+            ],
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "10.0.0.3/32"
+                }
+              }
+            ]
+          }
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "mpr-identity"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 8443,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "podSelector": {
+          "matchLabels": {
+            "mpr.redcol/service": "presence"
+          }
+        },
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ]
+      }
+    }
+  ]
+}

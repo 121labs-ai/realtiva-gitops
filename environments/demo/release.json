@@ -1,0 +1,47 @@
+{
+  "name": "realtiva-rehearsal",
+  "namespace": "realtiva-rehearsal",
+  "repository": "https://github.com/121labs-ai/realtiva-mpr.git",
+  "path": "environments/demo",
+  "source_id": "ae5a4292c34e47d0162aa42cb8cd889b3f5dc4f3",
+  "release_id": "demo-adoption-proposal",
+  "migration_id": "demo-existing-schema",
+  "phase": "quiesce",
+  "origins": {
+    "public": "https://app.realtiva.121labs.ai"
+  },
+  "sql_cidr": "10.0.0.3/32",
+  "media": {
+    "api_url": "https://rtc.realtiva.121labs.ai",
+    "cidr": "5.161.125.232/32",
+    "port": 443,
+    "room_namespace": "mpr-rehearsal-",
+    "policy_name": "presence-livekit-egress"
+  },
+  "edge": {
+    "namespace": "realtiva-rehearsal-edge",
+    "labels": {
+      "app.kubernetes.io/name": "mpr-edge"
+    }
+  },
+  "images": {
+    "identity": {
+      "runtime": "ghcr.io/121labs-ai/realtiva-mpr-identity@sha256:9aff47d639dcdb7672513a34e2dc653e6a8b6d542ddee2b7bb0d34cfe240e128",
+      "migrator": "ghcr.io/121labs-ai/realtiva-mpr-identity@sha256:836f9e7377274f48c37204639353d2c808c344415f1f84e23eaaa4a0e999f8a1"
+    },
+    "presence": {
+      "runtime": "ghcr.io/121labs-ai/realtiva-mpr-presence@sha256:86bda5a2729f8d51067e9fb250db5cf05804d06222bbe0ea9bf6828019571be2",
+      "migrator": "ghcr.io/121labs-ai/realtiva-mpr-presence@sha256:bb4bc39d549d2bdfc20b9468375cfdb3b6182ec83b09ced0c55ef8e0b42ebb51"
+    }
+  },
+  "image_pull_secret": "realtiva-ghcr-pull",
+  "tls": {
+    "identity_secret": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-identity",
+    "presence_secret": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-presence",
+    "peer_pins_secret": "mpr-mtls-aff713a5e4d047f7ad616a3226a8ba5e-pins"
+  },
+  "observability": {
+    "endpoint": "http://mpr-otlp.realtiva-rehearsal-otlp.svc.cluster.local:4318/v1/metrics",
+    "protocol": "http/protobuf"
+  }
+}
