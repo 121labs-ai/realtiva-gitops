@@ -1,7 +1,7 @@
 {
   "name": "realtiva-rehearsal",
   "namespace": "realtiva-rehearsal",
-  "repository": "https://github.com/121labs-ai/realtiva-mpr.git",
+  "repository": "https://github.com/121labs-ai/realtiva-gitops.git",
   "path": "environments/demo",
   "source_id": "ae5a4292c34e47d0162aa42cb8cd889b3f5dc4f3",
   "release_id": "demo-adoption-proposal",
