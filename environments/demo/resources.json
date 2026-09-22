@@ -144,7 +144,7 @@
         "namespace": "realtiva-rehearsal"
       },
       "spec": {
-        "replicas": 0,
+        "replicas": 1,
         "revisionHistoryLimit": 3,
         "selector": {
           "matchLabels": {
@@ -376,7 +376,7 @@
         "namespace": "realtiva-rehearsal"
       },
       "spec": {
-        "replicas": 0,
+        "replicas": 1,
         "revisionHistoryLimit": 3,
         "selector": {
           "matchLabels": {

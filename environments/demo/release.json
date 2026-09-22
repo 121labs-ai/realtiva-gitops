@@ -6,7 +6,7 @@
   "source_id": "ae5a4292c34e47d0162aa42cb8cd889b3f5dc4f3",
   "release_id": "demo-adoption-proposal",
   "migration_id": "demo-existing-schema",
-  "phase": "migrate",
+  "phase": "active",
   "origins": {
     "public": "https://app.realtiva.121labs.ai"
   },
